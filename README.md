@@ -1,6 +1,6 @@
-# MelodyMind Video Pipeline (SadTalker Only)
+# MelodyMind Podcast Pipeline
 
-Batch-generate split‑screen podcast style videos (Daniel left / Annabelle right) from per‑segment MP3 files.
+Batch-generate split‑screen podcast style videos (Daniel left / Annabelle right) from per‑segment MP3 files using `podcast_pipeline.py`.
 
 Per segment the pipeline:
 
@@ -49,7 +49,7 @@ The system now supports multiple languages with the following structure:
 
 ```text
 ./
-├─ melody_mind_split.py
+├─ podcast_pipeline.py
 ├─ SadTalker/
 ├─ inputs/
 │  └─ 1960s/
@@ -82,13 +82,13 @@ Each segment needs at least one of: `*_daniel.mp3` or `*_annabelle.mp3`. If the 
 
 ```bash
 # German (default)
-python melody_mind_split.py --decade 1960s --language de
+python podcast_pipeline.py --decade 1960s --language de
 
 # English
-python melody_mind_split.py --decade 1960s --language en
+python podcast_pipeline.py --decade 1960s --language en
 
 # Spanish
-python melody_mind_split.py --decade 1960s --language es
+python podcast_pipeline.py --decade 1960s --language es
 
 # Other languages: fr, it, pt
 ```
@@ -96,18 +96,18 @@ python melody_mind_split.py --decade 1960s --language es
 ### Legacy/Single Language (still works)
 
 ```bash
-python melody_mind_split.py --decade 1960s
+python podcast_pipeline.py --decade 1960s
 ```
 
 ### Advanced Examples
 
 ```bash
 # Custom English version
-python melody_mind_split.py --decade 1960s --language en --fps 25 --style still \
+python podcast_pipeline.py --decade 1960s --language en --fps 25 --style still \
   --sadtalker ./SadTalker --preprocess full --enhancer gfpgan --ducking
 
 # Resume run (skip already processed segments)
-python melody_mind_split.py --decade 1960s --language de --skip-existing
+python podcast_pipeline.py --decade 1960s --language de --skip-existing
 ```
 
 ---
@@ -150,12 +150,12 @@ Behavior:
 Basic example (image only):
 
 ```bash
-python melody_mind_split.py --decade 1960s \
+python podcast_pipeline.py --decade 1960s \
   --intro-image covers/intro.png \
 Auto duration example (matches audio length):
 
 ```bash
-python melody_mind_split.py --decade 1960s \
+python podcast_pipeline.py --decade 1960s \
   --intro-image covers/intro.png --intro-audio intro/theme_full.mp3 --intro-duration auto \
   --outro-image covers/outro.png --outro-audio intro/outro_jingle.mp3 --outro-duration auto
 ```
@@ -165,7 +165,7 @@ python melody_mind_split.py --decade 1960s \
 With music and custom durations/fade:
 
 ```bash
-python melody_mind_split.py --decade 1960s \
+python podcast_pipeline.py --decade 1960s \
   --intro-image covers/intro.png --intro-audio intro/intro_music.mp3 --intro-duration 6 \
   --outro-image covers/outro.png --outro-audio intro/outro_music.mp3 --outro-duration 8 \
   --fade 1.5
@@ -174,7 +174,7 @@ python melody_mind_split.py --decade 1960s \
 Disable only the intro (while keeping outro):
 
 ```bash
-python melody_mind_split.py --decade 1960s \
+python podcast_pipeline.py --decade 1960s \
   --intro-image covers/intro.png --no-intro \
   --outro-image covers/outro.png
 ```
