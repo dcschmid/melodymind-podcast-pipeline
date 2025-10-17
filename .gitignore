@@ -1,0 +1,83 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+.eggs/
+*.egg-info/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# Secrets and environment
+.env
+*.pem
+*.key
+
+# Outputs and temp
+outputs/
+**/outputs/
+*/outputs/
+*.tmp
+*.temp
+*.cache
+
+# Large audio/video intermediates
+inputs/**/audio/wav/
+inputs/**/clips/
+outputs/**/final/
+outputs/**/sadtalker/
+
+# SadTalker models and checkpoints
+SadTalker/checkpoints/
+SadTalker/*.safetensors
+SadTalker/*.pth.tar
+SadTalker/weights/
+
+# gfpgan / face enhancers
+gfpgan/weights/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Python virtualenvs
+.python-version
+
+# Coverage
+htmlcov/
+.coverage
+
+# Mac
+*.DS_Store
+
+# Misc
+*.bak
+*~
+
+# Keep the README and scripts
+!README.md
+!melody_mind_split.py
+
+# SadTalker directory
+SadTalker/
