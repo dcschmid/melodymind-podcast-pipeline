@@ -187,20 +187,63 @@ Tips:
 
 ---
 
+## Multilingual Setup & Tips
+
+### Quick Setup for Multiple Languages
+
+```bash
+# Create directories for all languages (done automatically)
+mkdir -p inputs/1960s/{de,en,es,fr,it,pt}/{audio,images}
+
+# Place audio files in language-specific directories:
+# inputs/1960s/de/audio/segment01_daniel.mp3
+# inputs/1960s/en/audio/segment01_daniel.mp3
+# etc.
+```
+
+### Character Images
+
+Character images (`daniel.png`, `annabelle.png`) are automatically copied to all language directories. 
+
+**For language-specific characters:** Replace images in the respective `images/` directories:
+- `inputs/1960s/de/images/daniel.png` (German Daniel)
+- `inputs/1960s/en/images/daniel.png` (English Daniel)
+- etc.
+
+### Output Files
+
+Language-specific output files:
+- German: `outputs/1960s/de/finished/1960s_de.mp4`
+- English: `outputs/1960s/en/finished/1960s_en.mp4`
+- Spanish: `outputs/1960s/es/finished/1960s_es.mp4`
+- etc.
+
+### Processing Tips
+
+1. **Cache Benefits:** Each language has separate cache directories (SadTalker outputs)
+2. **Parallel Processing:** You can run different languages simultaneously
+3. **Incremental Work:** Use `--skip-existing` to resume interrupted runs per language
+4. **Default Language:** If no `--language` specified, defaults to German (`de`)
+
+---
+
 ## Output Structure
+
+### Multilingual Output Structure
 
 ```text
 outputs/<DECADE>/
-  sadtalker/
-    daniel/<segment>/<segment>_daniel.mp4
-    annabelle/<segment>/<segment>_annabelle.mp4
-  final/
-    <segment>_split_core.mp4
-  finished/
-    <DECADE>.mp4
+  <LANGUAGE>/              # e.g., de/, en/, es/
+    sadtalker/
+      daniel/<segment>/<segment>_daniel.mp4
+      annabelle/<segment>/<segment>_annabelle.mp4
+    final/
+      <segment>_split_core.mp4
+    finished/
+      <DECADE>_<LANGUAGE>.mp4    # e.g., 1960s_de.mp4
 ```
 
-The final `<DECADE>.mp4` is created by concatenating all `*_split_core.mp4` files in sorted order.
+The final `<DECADE>_<LANGUAGE>.mp4` is created by concatenating all `*_split_core.mp4` files in sorted order.
 
 ---
 
