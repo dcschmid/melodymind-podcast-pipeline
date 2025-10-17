@@ -99,7 +99,110 @@ python podcast_pipeline.py --decade 1960s --language es
 python podcast_pipeline.py --decade 1960s
 ```
 
-### Advanced Examples
+---
+
+## Complete Step-by-Step Example
+
+Here's a complete walkthrough for creating a German 1960s podcast:
+
+### 1. Setup Project Structure
+
+```bash
+# Clone and setup the project
+git clone https://github.com/dcschmid/melodymind-podcast-pipeline.git
+cd melodymind-podcast-pipeline
+
+# Setup SadTalker (required)
+git clone https://github.com/OpenTalker/SadTalker.git
+cd SadTalker
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+bash scripts/download_models.sh
+deactivate
+cd ..
+```
+
+### 2. Prepare Your Content
+
+```bash
+# Create directory structure (done automatically, but shown for clarity)
+mkdir -p inputs/1960s/de/audio
+mkdir -p inputs/1960s/de/images
+
+# Place your audio files (example filenames)
+cp your_audio/segment01_daniel.mp3 inputs/1960s/de/audio/
+cp your_audio/segment01_annabelle.mp3 inputs/1960s/de/audio/
+cp your_audio/segment02_daniel.mp3 inputs/1960s/de/audio/
+cp your_audio/segment02_annabelle.mp3 inputs/1960s/de/audio/
+cp your_audio/segment03_daniel.mp3 inputs/1960s/de/audio/
+# Note: If segment03_annabelle.mp3 is missing, silent partner audio is auto-generated
+
+# Character images are already provided in inputs/1960s/de/images/
+# (daniel.png, annabelle.png) - replace with your own if needed
+```
+
+### 3. Run the Pipeline
+
+```bash
+# Basic run (German, default settings)
+python podcast_pipeline.py --decade 1960s --language de
+
+# Or with custom settings for better quality
+python podcast_pipeline.py --decade 1960s --language de \
+  --fps 30 \
+  --style still \
+  --enhancer gfpgan \
+  --ducking \
+  --loudnorm \
+  --verbose
+```
+
+### 4. Expected Output
+
+```bash
+# Processing output will show:
+[1] Segment: segment01 (speaker: daniel)
+[2] Segment: segment01 (speaker: annabelle)
+[3] Segment: segment02 (speaker: daniel)
+[4] Segment: segment02 (speaker: annabelle)
+[5] Segment: segment03 (speaker: daniel)
+
+# Final video will be created at:
+outputs/1960s/de/finished/1960s_de.mp4
+```
+
+### 5. Add Intro/Outro (Optional)
+
+```bash
+# With intro and outro
+python podcast_pipeline.py --decade 1960s --language de \
+  --intro-image covers/podcast-de.png \
+  --intro-audio intro/epic-metal.mp3 \
+  --intro-duration 5 \
+  --outro-image covers/podcast-de.png \
+  --outro-duration 3 \
+  --fade 1.5
+```
+
+### 6. Create Multiple Languages
+
+```bash
+# After placing English audio files in inputs/1960s/en/audio/
+python podcast_pipeline.py --decade 1960s --language en
+
+# Spanish version
+python podcast_pipeline.py --decade 1960s --language es
+
+# All languages will have separate outputs:
+# outputs/1960s/de/finished/1960s_de.mp4
+# outputs/1960s/en/finished/1960s_en.mp4
+# outputs/1960s/es/finished/1960s_es.mp4
+```
+
+---
+
+## Advanced Examples
 
 ```bash
 # Custom English version
