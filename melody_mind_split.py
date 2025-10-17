@@ -296,16 +296,17 @@ def create_cover_clip(image: Path, out_file: Path, duration: Union[float, str], 
 def process_decade(args):
     root = Path.cwd()
     decade = args.decade
+    language = args.language
     fps = args.fps
     sadtalker_dir = Path(args.sadtalker).resolve()
     if not sadtalker_dir.exists():
         raise SystemExit(f"SadTalker folder not found: {sadtalker_dir}")
 
-    decade_in = root / "inputs" / decade
+    decade_in = root / "inputs" / decade / language
     audio_dir = Path(args.audio_dir).resolve() if args.audio_dir else (decade_in / "audio").resolve()
     img_dir = (decade_in / "images").resolve()
 
-    out_base = root / "outputs" / decade
+    out_base = root / "outputs" / decade / language
     out_st_d = out_base / "sadtalker" / "daniel"
     out_st_a = out_base / "sadtalker" / "annabelle"
     out_final = out_base / "final"
@@ -594,7 +595,7 @@ def process_decade(args):
     # Concat all core segments + optional intro/outro into final episode
         finished_dir = out_base / "finished"
         ensure_dir(finished_dir)
-        finished_file = finished_dir / f"{decade}.mp4"
+        finished_file = finished_dir / f"{decade}_{language}.mp4"
         try:
             concat_final_segments(out_final, finished_file, fps, logger, intro_clip=intro_clip, outro_clip=outro_clip)
             logger.info(f"Finished video: {finished_file}")
@@ -605,6 +606,7 @@ def process_decade(args):
 def build_arg_parser():
     p = argparse.ArgumentParser(description="MelodyMind Video Pipeline (Linux) – SadTalker only")
     p.add_argument("--decade", required=True, help="Decade folder under inputs/, e.g. 1950s, 1960s")
+    p.add_argument("--language", default="de", choices=["de", "en", "es", "fr", "it", "pt"], help="Language code for multilingual support (default: de)")
     group = p.add_mutually_exclusive_group()
     group.add_argument("--still", dest="style", action="store_const", const="still", help="Use still head motion (fewer movements)")
     group.add_argument("--pose", dest="style", action="store_const", const="pose", help="Use pose head motion")

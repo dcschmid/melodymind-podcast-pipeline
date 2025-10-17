@@ -43,16 +43,34 @@ cd ..
 
 ## Directory Layout
 
+### Multilingual Structure (NEW!)
+
+The system now supports multiple languages with the following structure:
+
 ```text
 ./
 ├─ melody_mind_split.py
 ├─ SadTalker/
 ├─ inputs/
 │  └─ 1960s/
-│     ├─ audio/   (1960s_segment_001_daniel.mp3, 1960s_segment_002_annabelle.mp3, ...)
-│     └─ images/  (daniel.png, annabelle.png)
+│     ├─ de/      # German (default)
+│     │  ├─ audio/   (*_daniel.mp3, *_annabelle.mp3)
+│     │  └─ images/  (daniel.png, annabelle.png)
+│     ├─ en/      # English
+│     │  ├─ audio/
+│     │  └─ images/
+│     ├─ es/      # Spanish
+│     │  ├─ audio/
+│     │  └─ images/
+│     └─ [fr, it, pt]/  # French, Italian, Portuguese
 └─ outputs/
+   └─ 1960s/
+      ├─ de/     # German output -> 1960s_de.mp4
+      ├─ en/     # English output -> 1960s_en.mp4
+      └─ [es, fr, it, pt]/
 ```
+
+**Supported Languages:** `de` (German), `en` (English), `es` (Spanish), `fr` (French), `it` (Italian), `pt` (Portuguese)
 
 Each segment needs at least one of: `*_daniel.mp3` or `*_annabelle.mp3`. If the counterpart is missing a silent partner track is auto-generated keeping layout consistent.
 
@@ -60,27 +78,43 @@ Each segment needs at least one of: `*_daniel.mp3` or `*_annabelle.mp3`. If the 
 
 ## Basic Usage
 
+### Multilingual Usage
+
+```bash
+# German (default)
+python melody_mind_split.py --decade 1960s --language de
+
+# English
+python melody_mind_split.py --decade 1960s --language en
+
+# Spanish
+python melody_mind_split.py --decade 1960s --language es
+
+# Other languages: fr, it, pt
+```
+
+### Legacy/Single Language (still works)
+
 ```bash
 python melody_mind_split.py --decade 1960s
 ```
 
-Custom example:
+### Advanced Examples
 
 ```bash
-python melody_mind_split.py --decade 1960s --fps 25 --style still \
+# Custom English version
+python melody_mind_split.py --decade 1960s --language en --fps 25 --style still \
   --sadtalker ./SadTalker --preprocess full --enhancer gfpgan --ducking
-```
 
-Resume run (skip already processed segments):
-
-```bash
-python melody_mind_split.py --decade 1960s --skip-existing
+# Resume run (skip already processed segments)
+python melody_mind_split.py --decade 1960s --language de --skip-existing
 ```
 
 ---
 
 ## Key Options
 
+* `--language {de,en,es,fr,it,pt}` Language code for multilingual support (default: de)
 * `--fps` Target frame rate (default 25)
 * `--style {still|pose}` Head motion style (still = calmer)
 * `--preprocess {crop|resize|full}` SadTalker preprocessing (default: full)
