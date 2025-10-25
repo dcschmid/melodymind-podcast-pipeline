@@ -153,14 +153,20 @@ def make_static_video(image_path: Path, audio_wav: Path, out_path: Path, fps: in
  
 
 
-def as_wav(mp3_path: Path, wav_dir: Path) -> Path:
-    """Convert MP3 to 16kHz mono WAV if needed."""
+def as_wav(audio_path: Path, wav_dir: Path) -> Path:
+    """Ensure there is a 16 kHz mono WAV copy of any input audio file.
+
+    The pipeline historically looked for MP3 files only. Accept common audio
+    formats (wav, mp3, m4a, flac, aac, etc.) and always produce a
+    16 kHz mono WAV in `wav_dir` named <stem>.wav. If the target file
+    already exists it is reused.
+    """
     ensure_dir(wav_dir)
-    out = wav_dir / (mp3_path.stem + ".wav")
+    out = wav_dir / (audio_path.stem + ".wav")
     if not out.exists():
         run([
             "ffmpeg", "-y",
-            "-i", str(mp3_path),
+            "-i", str(audio_path),
             "-ar", "16000", "-ac", "1",
             str(out)
         ], quiet=True)
@@ -349,9 +355,17 @@ def process_decade(args):
 
     logger = Logger(verbose=args.verbose, quiet=args.quiet)
 
-    # Gather all audio files (both daniel and annabelle)
-    dan_files = sorted(audio_dir.glob("*_daniel.mp3"))
-    ann_files = sorted(audio_dir.glob("*_annabelle.mp3"))
+    # Gather all audio files (both daniel and annabelle) and accept common
+    # extensions (mp3, wav, m4a, flac, aac). This lets users place WAVs
+    # directly in the input folder instead of MP3s.
+    exts = ("mp3", "wav", "m4a", "flac", "aac")
+    dan_files = []
+    ann_files = []
+    for e in exts:
+        dan_files.extend(audio_dir.glob(f"*_daniel.{e}"))
+        ann_files.extend(audio_dir.glob(f"*_annabelle.{e}"))
+    dan_files = sorted(dan_files)
+    ann_files = sorted(ann_files)
     all_audio_files = dan_files + ann_files
     
     if not all_audio_files:
