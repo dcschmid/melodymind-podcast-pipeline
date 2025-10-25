@@ -361,11 +361,13 @@ def process_decade(args):
     exts = ("mp3", "wav", "m4a", "flac", "aac")
     dan_files = []
     ann_files = []
+    # Search recursively so files placed under audio/ or audio/wav/ are both found.
     for e in exts:
-        dan_files.extend(audio_dir.glob(f"*_daniel.{e}"))
-        ann_files.extend(audio_dir.glob(f"*_annabelle.{e}"))
-    dan_files = sorted(dan_files)
-    ann_files = sorted(ann_files)
+        dan_files.extend(audio_dir.rglob(f"*_daniel.{e}"))
+        ann_files.extend(audio_dir.rglob(f"*_annabelle.{e}"))
+    # Deduplicate and sort
+    dan_files = sorted(set(dan_files))
+    ann_files = sorted(set(ann_files))
     all_audio_files = dan_files + ann_files
     
     if not all_audio_files:
