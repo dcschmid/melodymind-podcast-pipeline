@@ -81,3 +81,5 @@ htmlcov/
 
 # SadTalker directory
 SadTalker/
+inputs/
+outputs/

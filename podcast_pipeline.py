@@ -150,6 +150,7 @@ def make_static_video(image_path: Path, audio_wav: Path, out_path: Path, fps: in
     logger.verbose_msg(f"Created static partner video: {out_path}")
 
 
+
  
 
 
@@ -371,54 +372,15 @@ def process_decade(args):
     all_audio_files = dan_files + ann_files
     
     if not all_audio_files:
-        print(f"ℹ️  No *_daniel.mp3 or *_annabelle.mp3 files in {audio_dir}", flush=True)
+        print(f"ℹ️  No *_daniel.* or *_annabelle.* audio files in {audio_dir} (supported: mp3,wav,m4a,flac,aac)", flush=True)
         return
 
     py = py_exec()
-    # ----------------------------------------------------------------------------------
-    # Pre-flight: detect enhancer dependency breakage (torchvision API mismatch).
-    # SadTalker enhancer stack (gfpgan/realesrgan) relies on basicsr expecting
-    # torchvision.transforms.functional_tensor (removed in newer torchvision releases).
-    # If import chain fails we auto-disable enhancers to avoid hard crash.
-    # ----------------------------------------------------------------------------------
-    enhancers_forced_off = False
-    if not args.no_enhancers:
-        try:
-            # Do a lightweight import test in a throwaway subprocess to isolate errors.
-            test_code = (
-                "import importlib, json, sys;\n"
-                "mods=['basicsr','gfpgan','realesrgan'];\n"
-                "ok=True;\n"
-                "errors={};\n"
-                "import torch, torchvision;\n"
-                "missing_attr=not hasattr(__import__('torchvision').transforms,'functional_tensor');\n"
-                "for m in mods:\n"
-                "  try: importlib.import_module(m)\n"
-                "  except Exception as e: ok=False; errors[m]=str(e)\n"
-                "print(json.dumps({'ok':ok,'errors':errors,'missing_attr':missing_attr}))"
-            )
-            out = subprocess.check_output([py, '-c', test_code], text=True)
-            import json as _json
-            probe = _json.loads(out)
-            # Fallback condition: either import errors or functional_tensor missing AND basicsr is present (will blow up later)
-            if (not probe.get('ok')) or probe.get('missing_attr'):
-                enhancers_forced_off = True
-        except Exception:
-            # Any unexpected probe failure -> be conservative and disable enhancers.
-            enhancers_forced_off = True
-
-    if enhancers_forced_off:
-        print("⚠️  Enhancer stack disabled automatically (incompatible torchvision/basicsr or missing packages).", flush=True)
-        print("    -> Running without face/background enhancement. You can fix by installing compatible versions:", flush=True)
-        print("       Suggested combo: torch==1.13.* / torchvision==0.14.* OR patch basicsr expecting new API.", flush=True)
-        args.no_enhancers = True
+    # Enhancers disabled by user preference — run without face/background enhancement.
+    args.no_enhancers = True
     sadtalker_style = "--still" if args.style == "still" else "--pose"
-    if args.no_enhancers:
-        sadtalker_enh = []
-        bg_enh_arg = []
-    else:
-        sadtalker_enh = ["--enhancer", args.enhancer] if args.enhancer != "none" else []
-        bg_enh_arg = ["--background_enhancer", args.background_enhancer] if args.background_enhancer else []
+    sadtalker_enh = []
+    bg_enh_arg = []
     # Select encoder once
     global_video_encoder = select_video_encoder()
     logger.info(f"Selected video encoder: {global_video_encoder}")
@@ -427,17 +389,17 @@ def process_decade(args):
     annabelle_segments = 0
     skipped_segments = 0
     for audio_file in sorted(all_audio_files):
-        # Determine speaker and segment info
-        if audio_file.name.endswith("_daniel.mp3"):
+        # Determine speaker and segment info by filename stem so extensions (.wav, .mp3, etc.) are accepted.
+        stem = audio_file.stem
+        if stem.endswith("_daniel"):
             speaker = "daniel"
-            base = str(audio_file)[:-len("_daniel.mp3")]
-        elif audio_file.name.endswith("_annabelle.mp3"):
+            segname = stem[:-len("_daniel")]
+        elif stem.endswith("_annabelle"):
             speaker = "annabelle"
-            base = str(audio_file)[:-len("_annabelle.mp3")]
+            segname = stem[:-len("_annabelle")]
         else:
+            # Not a recognized speaker pattern
             continue
-            
-        segname = Path(base).name
         segment_count += 1
         if speaker == "annabelle":
             annabelle_segments += 1
@@ -570,10 +532,10 @@ def process_decade(args):
         logger.info(f"OK {main_core}")
 
     if annabelle_segments == 0:
-        logger.warn("No Annabelle segments detected – verify *_annabelle.mp3 files exist.")
+        logger.warn("No Annabelle segments detected – verify *_annabelle.* audio files exist (e.g. *_annabelle.wav).")
 
     if segment_count == 0:
-        logger.warn(f"No segments found in: {audio_dir} (expect *_daniel.mp3 or *_annabelle.mp3)")
+        logger.warn(f"No segments found in: {audio_dir} (expect filenames like *_daniel.* or *_annabelle.*)")
     else:
         processed = segment_count - skipped_segments
         logger.info(f"Done: {segment_count} segment(s) (processed: {processed}, skipped: {skipped_segments}) -> {out_final}")
@@ -629,20 +591,22 @@ def build_arg_parser():
     p.set_defaults(style="still")
     p.add_argument("--fps", type=int, default=25, help="Frame rate (default: 25)")
     p.add_argument("--no-enhancers", action="store_true", help="Disable all SadTalker enhancers (face/background)")
+    
 
     p.add_argument("--ducking", action="store_true", help="Enable audio sidechain ducking")
     p.add_argument("--no-loudnorm", dest="loudnorm", action="store_false", help="Disable EBU R128 loudness normalization")
     # Intro / Outro Optionen
-    p.add_argument("--intro-image", help="Pfad zu Intro Cover Bild (png/jpg)")
-    p.add_argument("--intro-audio", help="Pfad zu Intro Musik (optional)")
+    p.add_argument("--intro-image", default="covers/the-melody-mind-podcast.jpg", help="Pfad zu Intro Cover Bild (png/jpg). Default: covers/the-melody-mind-podcast.jpg")
+    p.add_argument("--intro-audio", default="intro/epic-metal.mp3", help="Pfad zu Intro Musik (optional). Default: intro/epic-metal.mp3")
     p.add_argument("--intro-duration", default="5.0", help="Intro duration seconds or 'auto' (match intro audio). Default: 5.0")
-    p.add_argument("--outro-image", help="Pfad zu Outro Cover Bild (png/jpg)")
-    p.add_argument("--outro-audio", help="Pfad zu Outro Musik (optional)")
+    p.add_argument("--outro-image", default="covers/the-melody-mind-podcast.jpg", help="Pfad zu Outro Cover Bild (png/jpg). Default: covers/the-melody-mind-podcast.jpg")
+    p.add_argument("--outro-audio", default="intro/epic-metal.mp3", help="Pfad zu Outro Musik (optional). Default: intro/epic-metal.mp3")
     p.add_argument("--outro-duration", default="5.0", help="Outro duration seconds or 'auto' (match outro audio). Default: 5.0")
     p.add_argument("--fade", type=float, default=1.0, help="Fade duration for intro/outro video & audio (seconds, default: 1.0)")
     p.add_argument("--no-intro", action="store_true", help="Intro deaktivieren selbst wenn Pfad angegeben")
     p.add_argument("--no-outro", action="store_true", help="Outro deaktivieren selbst wenn Pfad angegeben")
     p.add_argument("--no-static-silent", dest="static_silent", action="store_false", help="Deaktiviere statische Videos für stumme Partner (immer SadTalker ausführen)")
+    
 
     p.add_argument("--daniel-image", help="Override path to Daniel's portrait (png/jpg)")
     p.add_argument("--annabelle-image", help="Override path to Annabelle's portrait (png/jpg)")
@@ -650,13 +614,13 @@ def build_arg_parser():
     p.add_argument("--audio-dir", help="Override audio dir for the given decade")
     p.add_argument("--sadtalker", default="./SadTalker", help="Path to SadTalker repo (default: ./SadTalker)")
     p.add_argument("--preprocess", default="full", choices=["crop", "resize", "full"], help="SadTalker preprocess mode (crop, resize, full)")
-    p.add_argument("--enhancer", default="gfpgan", choices=["gfpgan", "RestoreFormer", "none"], help="Face enhancer (default: gfpgan or RestoreFormer)")
-    p.add_argument("--background-enhancer", dest="background_enhancer", choices=["realesrgan", "none"], default=None, help="Background enhancer for full image (requires realesrgan)")
     p.add_argument("--quiet", action="store_true", help="Minimal output (errors + essential info only)")
     p.add_argument("--verbose", action="store_true", help="Verbose output (echo commands & ffmpeg details)")
     p.add_argument("--skip-existing", action="store_true", help="Skip segment if cached outputs exist")
 
-    p.set_defaults(loudnorm=True, static_silent=True)
+    # Default: enable loudnorm, keep static silent behavior, and disable
+    # intro/outro by default (make intro/outro opt-in).
+    p.set_defaults(loudnorm=True, static_silent=True, no_intro=True, no_outro=True)
     return p
 
 
@@ -685,12 +649,14 @@ def concat_final_segments(final_dir: Path, out_file: Path, fps: int, logger: Log
         for s in ordered:
             f.write(f"file '{s.as_posix()}'\n")
 
-    # Use ffmpeg concat demuxer with a re-encode to ensure compatibility
+    # Use ffmpeg concat demuxer with explicit format normalization to avoid AAC decode errors
+    # Force audio re-encoding to ensure clean AAC streams with consistent parameters
     cmd = [
         "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_file),
         "-c:v", select_video_encoder(),
         *( ["-crf", "18"] if select_video_encoder().startswith("libx") else [] ),
-        "-c:a", "aac", "-b:a", "192k",
+        "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2",
+        "-af", "aresample=async=1",  # Fix audio sync issues and stream alignment
         str(out_file)
     ]
     run(cmd, quiet=True, verbose=logger.verbose)
